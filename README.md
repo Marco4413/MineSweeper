@@ -7,9 +7,9 @@ It was made using my own library to make canvas interactions easier! You can che
 
 The keybindings are the following:
 
- * **R** : Starts a new game.
- * **Shift + Click** : Shows the clicked cell.
- * **Click** : Marks the clicked cell as a Bomb.
+ - **R** : Starts a new game.
+ - **Shift** : Shows the clicked cell.
+ - **Shift + Click** : Marks the clicked cell as a Bomb.
 
 ## Does this work on phones?
 
