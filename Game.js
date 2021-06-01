@@ -3,6 +3,8 @@ import { wCanvas, Color, UMath } from "./wCanvas/wcanvas.js";
 import { Cell } from "./Cell.js";
 
 export const CELL_RADIUS = 1;
+export const MARK_CELL_SHOW = 0;
+export const MARK_CELL_SUSPICIOUS = 1;
 
 const _FF_NEIGHBOURS_OFFSETS = [
     new UMath.Vec2(-1,  1),
@@ -12,7 +14,7 @@ const _FF_NEIGHBOURS_OFFSETS = [
     new UMath.Vec2( 1, -1),
     new UMath.Vec2( 0, -1),
     new UMath.Vec2(-1, -1),
-    new UMath.Vec2( 0,  1)
+    new UMath.Vec2(-1,  0)
 ];
 
 export class GameDrawStyle {
@@ -21,11 +23,13 @@ export class GameDrawStyle {
         valuesColors,
         showZeroes,
         bombColor,
+        suspiciousColor,
         gridColor
     ) {
         this.VALUES_COLORS = valuesColors;
         this.SHOW_ZEROES = showZeroes;
         this.BOMB_COLOR = bombColor;
+        this.SUSPICIOUS_COLOR = suspiciousColor;
         this.GRID_COLOR = gridColor;
     }
 
@@ -51,6 +55,13 @@ export class Game {
          * @type {Cell[]}
          */
         this._bombs = [ ];
+
+        /**
+         * @type {Cell[]}
+         */
+        this._marked = [ ];
+
+        this._playerLost = false;
 
         this._populateGrid(bombChance);
         this._calculateCellValues();
@@ -108,7 +119,10 @@ export class Game {
             if (!cell.isHidden()) continue;
 
             cell.setHidden(false);
-            if (cell.isBomb() || cell.getValue() !== targetValue) continue;
+            if (cell.isBomb()) {
+                this._playerLost = true;
+                continue;
+            } else if (cell.getValue() !== targetValue) continue;
 
             for (let i = 0; i < _FF_NEIGHBOURS_OFFSETS.length; i++) {
                 const offset = _FF_NEIGHBOURS_OFFSETS[i];
@@ -126,9 +140,10 @@ export class Game {
      * @param {Number} cellSize
      * @param {GameDrawStyle} drawStyle
      */
-    draw(canvas, deltaTime, x, y, cellSize, drawStyle) {
+    draw(canvas, deltaTime, x, y, cellSize, cellMargin, drawStyle) {
         canvas.save();
         canvas.stroke(drawStyle.GRID_COLOR);
+        canvas.textSize(cellSize - (cellSize * cellMargin * 2));
 
         const textSettings = { "noStroke": true, "alignment": { "horizontal": "center", "vertical": "center" } };
 
@@ -139,14 +154,18 @@ export class Game {
             const canvasX = x + cell.X * cellSize;
             const canvasY = y + cell.Y * cellSize;
             canvas.rect(canvasX, canvasY, cellSize, cellSize, { "noFill": true });
-            if (cell.isHidden()) continue;
+            
+            if (cell.isSuspicious()) {
+                canvas.fill(drawStyle.SUSPICIOUS_COLOR);
+                canvas.text("🏁", canvasX + halfSize, canvasY + halfSize, textSettings);
+                continue;
+            } else if (cell.isHidden()) continue;
 
             const cellValue = cell.getValue();
-            const isBomb = cell.isBomb();
 
-            if (isBomb) {
+            if (cell.isBomb()) {
                 canvas.fill(drawStyle.BOMB_COLOR);
-                canvas.text("Bomb", canvasX + halfSize, canvasY + halfSize, textSettings);
+                canvas.text("💣", canvasX + halfSize, canvasY + halfSize, textSettings);
             } else if (drawStyle.SHOW_ZEROES || cellValue !== 0) {
                 const color = drawStyle.VALUES_COLORS[ Math.min(cellValue, drawStyle.VALUES_COLORS.length - 1) ];
                 canvas.fill(color);
@@ -166,6 +185,60 @@ export class Game {
         if (x < 0 || x >= this.COLS || y < 0 || y >= this.ROWS) return undefined;
         const i = y * this.COLS + x;
         return this._cells[i];
+    }
+
+    /**
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} action
+     */
+    markCell(x, y, action) {
+        if (this.isGameOver()) return;
+
+        const cell = this.getCell(x, y);
+        if (cell === undefined) return;
+
+        switch (action) {
+            case MARK_CELL_SHOW: {
+                const isMarked = this._marked.findIndex(c => c === cell) >= 0;
+                if (!isMarked) this._floodFill(x, y, 0);
+                break;
+            }
+            case MARK_CELL_SUSPICIOUS: {
+                if (!cell.isHidden()) break;
+
+                const indexToRemove = this._marked.findIndex(c => c === cell);
+                if (indexToRemove >= 0) {
+                    cell.setSuspicious(false);
+                    this._marked.splice(indexToRemove, 1);
+                } else {
+                    cell.setSuspicious(true);
+                    this._marked.push(cell);
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * @returns {Boolean}
+     */
+    hasWon() {
+        if (this._playerLost || this._marked.length !== this._bombs.length) return false;
+        for (let i = 0; i < this._marked.length; i++)
+            if (!this._marked[i].isBomb()) return false;
+        return true;
+    }
+
+    /**
+     * @returns {Boolean}
+     */
+    hasLost() {
+        return this._playerLost;
+    }
+
+    isGameOver() {
+        return this.hasLost() || this.hasWon();
     }
 
 }

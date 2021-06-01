@@ -12,12 +12,24 @@ export class Cell {
         this.X = x;
         this.Y = y;
         this._isBomb = isBomb;
+        this._isSuspicious = false;
         this._value = value;
         this._isHidden = isHidden;
     }
 
     isBomb() {
         return this._isBomb;
+    }
+
+    /**
+     * @param {Boolean} suspicious
+     */
+    setSuspicious(suspicious) {
+        this._isSuspicious = suspicious;
+    }
+
+    isSuspicious() {
+        return this._isSuspicious;
     }
 
     /**
