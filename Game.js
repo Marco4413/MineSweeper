@@ -20,14 +20,16 @@ const _FF_NEIGHBOURS_OFFSETS = [
 export class GameDrawStyle {
 
     constructor(
+        backgroundColor,
         valuesColors,
-        showZeroes,
+        zeroBackground,
         bombColor,
         suspiciousColor,
         gridColor
     ) {
+        this.BACKGROUND_COLOR = backgroundColor;
         this.VALUES_COLORS = valuesColors;
-        this.SHOW_ZEROES = showZeroes;
+        this.ZERO_BACKGROUND_COLOR = zeroBackground;
         this.BOMB_COLOR = bombColor;
         this.SUSPICIOUS_COLOR = suspiciousColor;
         this.GRID_COLOR = gridColor;
@@ -140,7 +142,7 @@ export class Game {
      * @param {Number} cellSize
      * @param {GameDrawStyle} drawStyle
      */
-    draw(canvas, deltaTime, x, y, cellSize, cellMargin, drawStyle) {
+    draw(canvas, deltaTime, x, y, cellSize, cellMargin, showZeroes, drawStyle) {
         canvas.save();
         canvas.stroke(drawStyle.GRID_COLOR);
         canvas.textSize(cellSize - (cellSize * cellMargin * 2));
@@ -153,7 +155,8 @@ export class Game {
             
             const canvasX = x + cell.X * cellSize;
             const canvasY = y + cell.Y * cellSize;
-            canvas.rect(canvasX, canvasY, cellSize, cellSize, { "noFill": true });
+            canvas.fill(drawStyle.BACKGROUND_COLOR);
+            canvas.rect(canvasX, canvasY, cellSize, cellSize);
             
             if (cell.isSuspicious()) {
                 canvas.fill(drawStyle.SUSPICIOUS_COLOR);
@@ -166,10 +169,13 @@ export class Game {
             if (cell.isBomb()) {
                 canvas.fill(drawStyle.BOMB_COLOR);
                 canvas.text("💣", canvasX + halfSize, canvasY + halfSize, textSettings);
-            } else if (drawStyle.SHOW_ZEROES || cellValue !== 0) {
+            } else if (showZeroes || cellValue !== 0) {
                 const color = drawStyle.VALUES_COLORS[ Math.min(cellValue, drawStyle.VALUES_COLORS.length - 1) ];
                 canvas.fill(color);
                 canvas.text(cellValue, canvasX + halfSize, canvasY + halfSize, textSettings);
+            } else {
+                canvas.fill(drawStyle.ZERO_BACKGROUND_COLOR);
+                canvas.rect(canvasX, canvasY, cellSize, cellSize);
             }
         }
 
