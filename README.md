@@ -8,9 +8,9 @@ It was made using my own library to make canvas interactions easier! You can che
 The keybindings are the following:
 
  * **R** : Starts a new game.
- * **Click** : Shows the clicked cell.
- * **Shift + Click** : Marks the clicked cell as a Bomb.
+ * **Shift + Click** : Shows the clicked cell.
+ * **Click** : Marks the clicked cell as a Bomb.
 
 ## Does this work on phones?
 
-This project doesn't currently work on phones, tho it will probably support them in the near future.
+It kind of works on mobile, by double tapping on a cell you can show it and by tapping once you can mark it as a bomb, and by tapping on game over you can restart the game.

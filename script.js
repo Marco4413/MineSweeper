@@ -27,7 +27,6 @@ const GAME_MAX_COLS = 20;
 const GAME_MIN_ROWS = 10;
 const GAME_MAX_ROWS = 20;
 
-const GAME_POS = new UMath.Vec2(0, 0);
 const CELL_MARGIN = 0.2;
 /* END OF SETTINGS */
 
@@ -35,6 +34,8 @@ const CELL_MARGIN = 0.2;
  * @type {Game}
  */
 let game;
+
+const GAME_POS = new UMath.Vec2(0, 0);
 let cellSize = 1;
 
 function canvasPosToGrid(x, y) {
@@ -115,11 +116,21 @@ window.addEventListener("load", () => {
     });
 });
 
+
+window.addEventListener("touchend", ev => {
+    if (game.isGameOver()) newGame();
+});
+
 window.addEventListener("click", ev => {
     const pos = canvasPosToGrid(ev.x, ev.y);
     if (ev.shiftKey) {
-        game.markCell(pos.x, pos.y, MARK_CELL_SUSPICIOUS);
-    } else game.markCell(pos.x, pos.y, MARK_CELL_SHOW);
+        game.markCell(pos.x, pos.y, MARK_CELL_SHOW);
+    } else game.markCell(pos.x, pos.y, MARK_CELL_SUSPICIOUS);
+});
+
+window.addEventListener("dblclick", ev => {
+    const pos = canvasPosToGrid(ev.x, ev.y);
+    game.markCell(pos.x, pos.y, MARK_CELL_SHOW);
 });
 
 window.addEventListener("keypress", ev => {
