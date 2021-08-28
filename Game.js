@@ -1,6 +1,7 @@
 
 import { wCanvas, Color, UMath } from "./wCanvas/wcanvas.js";
 import { Cell } from "./Cell.js";
+import { AnimatedCell } from "./AnimatedCell.js";
 
 export const CELL_RADIUS = 1;
 export const MARK_CELL_SHOW = 0;
@@ -79,7 +80,7 @@ export class Game {
         for (let y = 0; y < this.ROWS; y++) {
             for (let x = 0; x < this.COLS; x++) {
                 const isBomb = (Math.random() <= bombChance);
-                const cell = new Cell(x, y, isBomb, 0, true);
+                const cell = new AnimatedCell(x, y, isBomb, 0, true);
 
                 this._cells.push(cell);
                 if (isBomb) this._bombs.push(cell);
@@ -144,41 +145,10 @@ export class Game {
      */
     draw(canvas, deltaTime, x, y, cellSize, cellMargin, showZeroes, drawStyle) {
         canvas.save();
+        for (let i = 0; i < this._cells.length; i++)
+            this._cells[i].draw(canvas, deltaTime, x, y, cellSize, cellMargin, showZeroes, drawStyle);
         canvas.stroke(drawStyle.GRID_COLOR);
-        canvas.textSize(cellSize - (cellSize * cellMargin * 2));
-
-        const textSettings = { "noStroke": true, "alignment": { "horizontal": "center", "vertical": "center" } };
-
-        const halfSize = cellSize / 2;
-        for (let i = 0; i < this._cells.length; i++) {
-            const cell = this._cells[i];
-            
-            const canvasX = x + cell.X * cellSize;
-            const canvasY = y + cell.Y * cellSize;
-            canvas.fill(drawStyle.BACKGROUND_COLOR);
-            canvas.rect(canvasX, canvasY, cellSize, cellSize);
-            
-            if (cell.isSuspicious()) {
-                canvas.fill(drawStyle.SUSPICIOUS_COLOR);
-                canvas.text("🏁", canvasX + halfSize, canvasY + halfSize, textSettings);
-                continue;
-            } else if (cell.isHidden()) continue;
-
-            const cellValue = cell.getValue();
-
-            if (cell.isBomb()) {
-                canvas.fill(drawStyle.BOMB_COLOR);
-                canvas.text("💣", canvasX + halfSize, canvasY + halfSize, textSettings);
-            } else if (showZeroes || cellValue !== 0) {
-                const color = drawStyle.VALUES_COLORS[ Math.min(cellValue, drawStyle.VALUES_COLORS.length - 1) ];
-                canvas.fill(color);
-                canvas.text(cellValue, canvasX + halfSize, canvasY + halfSize, textSettings);
-            } else {
-                canvas.fill(drawStyle.ZERO_BACKGROUND_COLOR);
-                canvas.rect(canvasX, canvasY, cellSize, cellSize);
-            }
-        }
-
+        canvas.rect(x, y, cellSize * this.COLS, cellSize * this.ROWS, { "noFill": true });
         canvas.restore();
     }
 
